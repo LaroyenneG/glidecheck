@@ -8,6 +8,8 @@ from lxml import etree
 import matplotlib.pyplot as plt
 
 MAX_GLIDE_RATIO: Final[float] = 60.0
+MIN_DISTANCE: Final[float] = 1500.0
+MIN_ALTITUDE: Final[float] = 250.0
 
 AIRPORTS_DATA_URL: Final[str] = "https://ourairports.com/data/airports.csv"
 
@@ -58,7 +60,7 @@ def search_nearest_airport(flight_data, airports):
     nearest_airport = None
     min_distance = float('inf')
 
-    points = [flight_data[0], flight_data[len(flight_data) // 2], flight_data[1]]
+    points = [flight_data[0], flight_data[len(flight_data) // 2], flight_data[len(flight_data) - 1]]
     for point in points:
         point_coords = (point[0], point[1])
         for airport in airports:
@@ -76,13 +78,13 @@ def compute_glide_ratio(airport, point):
     terrain_elevation = float(airport["elevation_ft"]) / 3.28
     terrain_latitude = float(airport["latitude_deg"])
     terrain_longitude = float(airport["longitude_deg"])
-    terrain_min_alt = terrain_elevation + 250
+    terrain_min_alt = terrain_elevation + MIN_ALTITUDE
 
-    distance_m = geodesic((terrain_latitude, terrain_longitude), (point[0], point[1])).meters
+    distance = geodesic((terrain_latitude, terrain_longitude), (point[0], point[1])).meters
 
     altitude = (point[2] - terrain_min_alt)
 
-    return distance_m / altitude if altitude > 0 and distance_m > 1000 else 0
+    return distance / altitude if altitude >= MIN_ALTITUDE and distance >= MIN_DISTANCE else 0
 
 
 def compute_glide_ratios(airport, fd):
@@ -98,7 +100,7 @@ def main():
     airports = load_airports_data()
     print("airports found: ", len(airports))
 
-    file = "C:\\Users\\guill\Downloads\\activity_19502971901.tcx"
+    file = "C:\\Users\\guill\\Downloads\\activity_18992510520.tcx"
     fd = parse_tcx_gps_data_in_tcx(file)
 
     airport = search_nearest_airport(fd, airports)
