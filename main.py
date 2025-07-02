@@ -7,6 +7,8 @@ from geopy.distance import geodesic
 from lxml import etree
 import matplotlib.pyplot as plt
 
+MAX_GLIDE_RATIO: Final[float] = 60.0
+
 AIRPORTS_DATA_URL: Final[str] = "https://ourairports.com/data/airports.csv"
 
 
@@ -26,9 +28,6 @@ def load_airports_data():
 
 
 def parse_tcx_gps_data_in_tcx(file_path):
-    """
-    Parse un fichier TCX avec lxml et retourne une liste de tuples (lat, lon, alt).
-    """
     ns = {
         'tcx': 'http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2'
     }
@@ -38,11 +37,9 @@ def parse_tcx_gps_data_in_tcx(file_path):
 
     results = []
 
-    # XPath pour trouver tous les Trackpoint
     trackpoints = root.xpath('.//tcx:Trackpoint', namespaces=ns)
 
     for tp in trackpoints:
-        # Extraire Position
         lat = tp.xpath('./tcx:Position/tcx:LatitudeDegrees/text()', namespaces=ns)
         lon = tp.xpath('./tcx:Position/tcx:LongitudeDegrees/text()', namespaces=ns)
         alt = tp.xpath('./tcx:AltitudeMeters/text()', namespaces=ns)
@@ -93,7 +90,7 @@ def compute_glide_ratios(airport, fd):
     for point in fd:
         glide_ratio = compute_glide_ratio(airport, point)
         if glide_ratio > 0:
-            glide_ratios.append(min(max(glide_ratio, 0), 60))
+            glide_ratios.append(min(max(glide_ratio, 0), MAX_GLIDE_RATIO))
     return glide_ratios
 
 
@@ -101,7 +98,7 @@ def main():
     airports = load_airports_data()
     print("airports found: ", len(airports))
 
-    file = "C:\\Users\\guill\\Downloads\\activity_19571848016.tcx"
+    file = "C:\\Users\\guill\Downloads\\activity_19502971901.tcx"
     fd = parse_tcx_gps_data_in_tcx(file)
 
     airport = search_nearest_airport(fd, airports)
